@@ -52,9 +52,10 @@ Simulated transition data for 5 days and the corresponding transition probabilit
 
 ### Step 1: Transition Rate Matrix
 **Formula:**
-\[
+
+$$
 \lambda_{ij} = \frac{\text{Total number of transitions from state } i \text{ to state } j}{\text{Total duration (hours) spent in state } i}
-\]
+$$
 - Simulate the total transitions and duration in each state to construct the transition rate matrix.
 
 ---
