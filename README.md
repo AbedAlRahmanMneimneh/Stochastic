@@ -6,10 +6,11 @@ This project provides a comprehensive analysis of bank operational dynamics usin
 
 **BEFORE ANY ELABORATION PLEASE NOTE THE FOLLOWING IN ORDER TO PROPERLY VIEW AND UNDERSTAND THE REPORT:**
 
-- **"bank-data.csv" :** This file contains the collected bank data.
-- **"INE308 Tech Assignment - Spring 2025.pdf" :** This file contains the steps questions that needs anwering that were required by the instructor to tackle this problem.
-- **"Project_Analysis.ipynb" :** This file is the notebook were the code was executed and explained and the output were elaborated on.
-- **"Stochastic_Bank_Activity_Analysis.pdf" :** This file contains a printed out version of the  notebook that should be opened instead of th actual ipynb if you do not have the required environment or software to view or run it (recommended environments are: google collab, anaconda jupyter notebooks) 
+- To view the work done you can either open the "Project_Analysis.ipynb" through github just by clicking it in the github repo (github provides a way to view the Project_Analysis.ipynb without installing anything else) or open the pdf locally on your computer  
+  - **"bank-data.csv" :** This file contains the collected bank data.
+  - **"INE308 Tech Assignment - Spring 2025.pdf" :** This file contains the steps questions that needs anwering that were required by the instructor to tackle this problem.
+  - **"Project_Analysis.ipynb" :** This file is the notebook were the code was executed and explained and the output were elaborated on.
+  - **"Stochastic_Bank_Activity_Analysis.pdf" :** This file contains a printed out version of the notebook that should be opened instead of th actual ipynb if you do not have the required environment or software to view or run it (recommended environmentsto view the .ipynb file are the following: github, google collab, anaconda jupyter notebooks) 
 
 ### Purpose
 The analysis aims to provide bank managers with data-driven insights to:
