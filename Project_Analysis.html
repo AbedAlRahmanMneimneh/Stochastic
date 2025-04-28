@@ -9311,7 +9311,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <li><p><strong>Calculate Result:</strong> Use this function to calculate the time from state 0 to state max_tellers</p>
 </li>
 </ol>
-<p><strong>Output Explanation:</strong> The output number (<code>48.0376 hours</code>) is the average time it takes for the bank to reach full teller capacity (all 5 tellers busy) for the first time, starting from an empty state (0 busy tellers). This surprisingly long time is a consequence of the low arrival rate compared to the service rate in this model; it takes a long time, on average, for enough arrivals to occur without intervening service completions to fill all 5 teller spots simultaneously.</p>
+<p><strong>Output Explanation:</strong> The output number (<code>48.0376 hours</code>) is the average time it takes for the bank to reach full teller capacity (all 5 tellers busy) for the first time, starting from an empty state (0 busy tellers). This surprisingly long time results from the low arrival rate (10.71 customers/hour) compared to the combined service rate of 5 tellers (96.43 customers/hour). The system moves away from full capacity much faster than it moves toward it, making it rare for all tellers to be simultaneously busy.</p>
 </div>
 </div>
 </div>
@@ -9376,34 +9376,38 @@ Probability of queue formation at 12:00 PM: 0.0003
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">Sensitivity Analysis: Impact of Varying Teller Numbers<a class="anchor-link" href="#Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">¶</a></h3><p><strong>Why:</strong> To explore how key performance metrics (like the chance of all tellers being busy) change if the bank were to operate with a different number of tellers (e.g., 3, 4, 5, 6, or 7).</p>
+<h3 id="Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">Sensitivity Analysis: Impact of Varying Teller Numbers<a class="anchor-link" href="#Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">¶</a></h3><p><strong>Why:</strong> To explore how key performance metrics change if the bank were to operate with a different number of tellers (from 3 to 7).</p>
 <p><strong>How:</strong></p>
 <ol>
-<li><p><strong>Define Analysis Function:</strong> Create a function <code>analyze_varying_tellers</code> that takes the arrival rate (λ), service rate (μ), and a list/range of teller numbers (<code>teller_range</code>) to test.</p>
+<li><p><strong>Define Analysis Function:</strong> Create a function <code>analyze_varying_tellers</code> that takes the arrival rate (λ), service rate (μ), and a range of teller numbers to test.</p>
 </li>
-<li><p><strong>Loop Through Teller Numbers:</strong> Inside this function, loop through each number of tellers (<code>N</code>) in the <code>teller_range</code>.</p>
-</li>
-<li><p><strong>Build Model for N:</strong> For each <code>N</code>, construct the specific Birth-Death rate matrix (<code>Qn</code>) for a system with <code>N</code> tellers using the same λ and μ (using an inner helper function <code>construct_Q</code>).</p>
-</li>
-<li><p><strong>Calculate Metrics for N:</strong></p>
+<li><p><strong>Loop Through Teller Numbers:</strong> For each potential staffing level (N=3 to N=7), the function:</p>
 <ul>
-<li>Calculate steady-state probabilities (<code>π</code>) for this <code>N</code>-teller system</li>
-<li>Calculate traffic intensity <code>ρ = λ / (μ * N)</code> for this <code>N</code></li>
-<li>Calculate blocking probability (<code>blocking_prob</code>), which is the steady-state probability of all tellers being busy, i.e., <code>π[N]</code></li>
-<li><strong>Calculate true utilization:</strong> Compute the expected number of busy tellers <code>Sum(i * π[i])</code> and divide by total tellers <code>N</code></li>
+<li>Constructs a birth-death rate matrix using an inner helper function <code>construct_Q</code></li>
+<li>For each value of N, this creates a unique (N+1)×(N+1) matrix representing states from 0 to N busy tellers</li>
+<li>Each matrix has the same arrival rate λ but different total service capacity</li>
 </ul>
 </li>
-<li><p><strong>Store and Display Results:</strong> Store these metrics for each number of tellers and print them in a formatted table</p>
+<li><p><strong>Calculate Key Metrics:</strong></p>
+<ul>
+<li>Traffic intensity (ρ = λ/μN): The ratio of arrival rate to maximum service capacity</li>
+<li>Blocking probability: The chance that all tellers are busy (π[N])</li>
+<li>Expected number of busy tellers: The weighted average Sum(i × π[i])</li>
+<li>True utilization: The proportion of teller capacity actually used (expected busy tellers / N)</li>
+</ul>
+</li>
+<li><p><strong>Display Results:</strong> Present the metrics in a formatted table for comparison</p>
 </li>
 </ol>
-<p><strong>Output Explanation:</strong> The output shows a comparison for different numbers of tellers:</p>
+<p><strong>Output Explanation:</strong> The results demonstrate how staffing affects performance:</p>
 <ul>
-<li><strong>N=3:</strong> With 3 tellers, traffic intensity (ρ) is higher (~0.19), blocking probability is ~1.6%, utilization is ~11.1%</li>
-<li><strong>N=4:</strong> With 4 tellers, ρ drops (~0.14), blocking drops significantly (~0.2%), utilization remains ~11.1%</li>
-<li><strong>N=5 (Actual):</strong> With 5 tellers, ρ drops further (~0.11), blocking becomes very small (~0.03%), utilization is ~11.1%</li>
-<li><strong>N=6, N=7:</strong> Adding more tellers further reduces ρ and makes blocking almost zero, while utilization remains the same</li>
+<li><strong>N=3:</strong> Traffic intensity ρ=0.19, blocking probability 1.6%, utilization 18.2%</li>
+<li><strong>N=4:</strong> Traffic intensity ρ=0.14, blocking probability drops to 0.2%, utilization 13.9%</li>
+<li><strong>N=5 (Current):</strong> Traffic intensity ρ=0.11, blocking probability nearly 0%, utilization 11.1%</li>
+<li><strong>N=6:</strong> Traffic intensity ρ=0.09, blocking probability negligible, utilization 9.3%</li>
+<li><strong>N=7:</strong> Traffic intensity ρ=0.08, blocking probability negligible, utilization 7.9%</li>
 </ul>
-<p>The key insight is that while having more tellers reduces blocking probability (the chance that all tellers are busy), the actual utilization per teller remains the same. This suggests the system is overstaffed even at 3 tellers, as the utilization is consistently low across all staffing levels.</p>
+<p>This analysis reveals a critical staffing insight: <strong>as the number of tellers increases, utilization decreases significantly</strong>. While having 5 tellers virtually eliminates queue formation (blocking~0%), the actual teller utilization is only 11.1%. Even with just 3 tellers, blocking probability would remain reasonably low (1.6%) while improving utilization to 18.2%. This suggests the bank could reduce staffing levels by 1-2 tellers while maintaining acceptable service levels, potentially reducing labor costs by 20-40%.</p>
 </div>
 </div>
 </div>
@@ -9412,7 +9416,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 5. Impact of varying the number of tellers</span>
@@ -9500,7 +9504,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 6. Full‐capacity visits per 9hr day</span>
