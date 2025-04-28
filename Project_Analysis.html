@@ -7520,6 +7520,31 @@ a.anchor-link {
 <h1 id="Bank-Operational-Dynamics-Analysis-Using-Stochastic-Methods">Bank Operational Dynamics Analysis Using Stochastic Methods<a class="anchor-link" href="#Bank-Operational-Dynamics-Analysis-Using-Stochastic-Methods">¶</a></h1><p><strong>Prepared By:</strong> Abed ElRahman Mneimneh</p>
 <p><strong>Project Title:</strong> Bank Operational Dynamics Analysis Using Stochastic Methods</p>
 <hr/>
+<h2 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">¶</a></h2><p>This project provides a comprehensive analysis of bank operational dynamics using stochastic modeling methods, specifically Markov Chains, Markov Processes, and Birth-Death Processes. The analysis helps understand customer queue behaviors and teller utilization patterns to optimize bank operations.</p>
+<p><strong>BEFORE ANY ELABORATION PLEASE NOTE THE FOLLOWING IN ORDER TO PROPERLY VIEW AND UNDERSTAND THE REPORT:</strong></p>
+<ul>
+<li><strong>"bank-data.csv" :</strong> This file contains the collected bank data.</li>
+<li><strong>"INE308 Tech Assignment - Spring 2025.pdf" :</strong> This file contains the steps questions that needs anwering that were required by the instructor to tackle this problem.</li>
+<li><strong>"Project_Analysis.ipynb" :</strong> This file is the notebook were the code was executed and explained and the output were elaborated on.</li>
+<li><strong>"Project_Analysis.html" :</strong> This file contains a better way to view the report (the notebook named Project_Analysis.ipynb) as an html file which would open directly in your browser when clicked on (assuming you downloaded the whole project folder)</li>
+<li><strong>"Stochastic_Bank_Activity_Analysis.pdf" :</strong> This file contains a printed out version of the  notebook that should be opened instead of th actual ipynb if you do not have the required environment or software to view or run it (recommended environments are: google collab, anaconda jupyter notebooks)</li>
+</ul>
+<h3 id="Purpose">Purpose<a class="anchor-link" href="#Purpose">¶</a></h3><p>The analysis aims to provide bank managers with data-driven insights to:</p>
+<ul>
+<li>Predict queue formations throughout the day</li>
+<li>Optimize staff scheduling based on customer flow patterns</li>
+<li>Improve customer experience by reducing waiting times</li>
+<li>Make informed decisions about teller allocation</li>
+</ul>
+<h3 id="Data-Description">Data Description<a class="anchor-link" href="#Data-Description">¶</a></h3><p>This analysis uses hourly observations of bank queue states and teller activities collected over five business days during regular banking hours (8:00 AM to 4:00 PM). The data includes queue lengths, teller activity, and transaction times.</p>
+<h3 id="Methodology-Overview">Methodology Overview<a class="anchor-link" href="#Methodology-Overview">¶</a></h3><p>The analysis employs three increasingly sophisticated stochastic modeling techniques:</p>
+<ol>
+<li><strong>Discrete-time Markov Chains</strong>: Analyzing hourly transition probabilities between queue states</li>
+<li><strong>Continuous-time Markov Processes</strong>: Modeling transition rates for more precise timing analysis</li>
+<li><strong>Birth-Death Processes</strong>: Specialized analysis of teller utilization and service efficiency</li>
+</ol>
+<h2 id="Objective">Objective<a class="anchor-link" href="#Objective">¶</a></h2><p>To analyze the operational dynamics of a bank using Markov Chains and Birth-Death Processes, where the state of the system is observed hourly during business hours (8:00 AM to 4:00 PM).</p>
+<hr/>
 <h2 id="Outline">Outline<a class="anchor-link" href="#Outline">¶</a></h2><ol>
 <li><p><strong>Introduction</strong></p>
 <ul>
@@ -9504,7 +9529,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 6. Full‐capacity visits per 9hr day</span>
