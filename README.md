@@ -1,5 +1,32 @@
 # Bank Operational Dynamics Analysis Using Markov Chains
 
+## Introduction
+
+This project provides a comprehensive analysis of bank operational dynamics using stochastic modeling methods, specifically Markov Chains, Markov Processes, and Birth-Death Processes. The analysis helps understand customer queue behaviors and teller utilization patterns to optimize bank operations.
+
+**BEFORE ANY ELABORATION PLEASE NOTE THE FOLLOWING IN ORDER TO PROPERLY VIEW AND UNDERSTAND THE REPORT:**
+
+- **"bank-data.csv" :** This file contains the collected bank data.
+- **"INE308 Tech Assignment - Spring 2025.pdf" :** This file contains the steps questions that needs anwering that were required by the instructor to tackle this problem.
+- **"Project_Analysis.ipynb" :** This file is the notebook were the code was executed and explained and the output were elaborated on.
+- **"Stochastic_Bank_Activity_Analysis.pdf" :** This file contains a printed out version of the  notebook that should be opened instead of th actual ipynb if you do not have the required environment or software to view or run it (recommended environments are: google collab, anaconda jupyter notebooks) 
+
+### Purpose
+The analysis aims to provide bank managers with data-driven insights to:
+- Predict queue formations throughout the day
+- Optimize staff scheduling based on customer flow patterns
+- Improve customer experience by reducing waiting times
+- Make informed decisions about teller allocation
+
+### Data Description
+This analysis uses hourly observations of bank queue states and teller activities collected over five business days during regular banking hours (8:00 AM to 4:00 PM). The data includes queue lengths, teller activity, and transaction times.
+
+### Methodology Overview
+The analysis employs three increasingly sophisticated stochastic modeling techniques:
+1. **Discrete-time Markov Chains**: Analyzing hourly transition probabilities between queue states
+2. **Continuous-time Markov Processes**: Modeling transition rates for more precise timing analysis
+3. **Birth-Death Processes**: Specialized analysis of teller utilization and service efficiency
+
 ## Objective
 To analyze the operational dynamics of a bank using Markov Chains and Birth-Death Processes, where the state of the system is observed hourly during business hours (8:00 AM to 4:00 PM).
 
@@ -104,22 +131,6 @@ Simulated service times and customer arrivals to construct the transition rate m
 
 6. **Frequency of Full Capacity:**
    - Determine how often the system reaches full capacity during the working day.
-
----
-
-## Report Structure
-
-### 1. Execution Steps
-- Detailed explanation of how each step was implemented.
-
-### 2. Results and Answers
-- Answers to all required questions with supporting calculations and visualizations.
-
-### 3. Evaluation and Assessment
-- Interpretation of results within realistic and factual perspectives.
-- Recommendations for operational improvements.
-
----
 
 ## Appendix: Code and Simulated Data
 Provide Python or R code for data simulation, matrix computation, and analysis.
