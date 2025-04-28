@@ -9286,17 +9286,30 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Calculating-Expected-Time-to-Full-Teller-Occupancy">Calculating Expected Time to Full Teller Occupancy<a class="anchor-link" href="#Calculating-Expected-Time-to-Full-Teller-Occupancy">¶</a></h3><p><strong>Why:</strong> To find the average time it takes for the system to go from having no busy tellers (State 0) to having all tellers busy (State 5) for the <em>first</em> time, using the Birth-Death model.</p>
-<p><strong>How:</strong> This is a Mean First Passage Time (MFPT) calculation, similar to Part 2, but using the <code>bd_matrix</code> and targeting State 5.</p>
+<p><strong>How:</strong> For a Birth-Death process, there's an efficient recursive formula to calculate the Mean First Passage Time (MFPT).</p>
 <ol>
-<li><strong>Define Target:</strong> Set the target state (<code>target_state</code>) to <code>max_tellers</code> (which is 5).</li>
-<li><strong>Set up Equations:</strong> Create the matrix <code>A</code> and vector <code>b</code> to represent the system of linear equations for the MFPTs (<code>m_i</code>) to reach State 5. For each state <code>i</code>:<ul>
-<li>If <code>i</code> is the target state (5), the equation is <code>m_5 = 0</code> (set <code>A[5, 5] = 1</code>, <code>b[5] = 0</code>).</li>
-<li>If <code>i</code> is not the target state, the equation is <code>Σ(k) λ_ik * m_k = -1</code>. The rates <code>λ_ik</code> come from <code>bd_matrix[i, k]</code>, and these become the coefficients in row <code>i</code> of matrix <code>A</code>. The right-hand side is <code>b[i] = -1</code>.</li>
+<li><p><strong>Extract Birth and Death Rates:</strong> First extract the birth rates (λ) and death rates (μ) from the rate matrix:</p>
+<ul>
+<li>For states 0 to N-1, the birth rate (λᵢ) is the transition rate from state i to i+1</li>
+<li>For states 1 to N, the death rate (μᵢ) is the transition rate from state i to i-1</li>
+<li>For state 0, there's no transition to state -1, so μ₀ = 0</li>
 </ul>
 </li>
-<li><strong>Solve System:</strong> Solve the system <code>A * m = b</code> for the vector <code>m</code> (which contains the MFPTs from each state <code>i</code> to state 5) using <code>np.linalg.solve</code>.</li>
-<li><strong>Extract Result:</strong> Get the specific MFPT starting from State 0. This is the first element of the solution vector <code>m</code> (i.e., <code>m[0]</code>). Store this in <code>expected_time_to_full</code>.</li>
-<li><strong>Print Result:</strong> Print the calculated average time. Include error handling (<code>try...except</code>) in case the system cannot be solved.</li>
+<li><p><strong>Define Recursive MFPT Function:</strong> The function <code>compute_mfpt</code> implements a recursive formula for Birth-Death processes:</p>
+<ul>
+<li>It initializes an array E to store expected times for each step</li>
+<li>For state 0, E[0] = 1/λ₀ (average time for first arrival)</li>
+<li>For states 1 to N-1, E[k] = (1 + μₖ·E[k-1])/λₖ, which accounts for:<ul>
+<li>The direct time 1/λₖ to move from k to k+1</li>
+<li>The possibility of moving back to state k-1 (with rate μₖ) and then returning</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Sum Components:</strong> The total MFPT is the sum of these components from the start state to the target</p>
+</li>
+<li><p><strong>Calculate Result:</strong> Use this function to calculate the time from state 0 to state max_tellers</p>
+</li>
 </ol>
 <p><strong>Output Explanation:</strong> The output number (<code>48.0376 hours</code>) is the average time it takes for the bank to reach full teller capacity (all 5 tellers busy) for the first time, starting from an empty state (0 busy tellers). This surprisingly long time is a consequence of the low arrival rate compared to the service rate in this model; it takes a long time, on average, for enough arrivals to occur without intervening service completions to fill all 5 teller spots simultaneously.</p>
 </div>
@@ -9311,33 +9324,33 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 4. Expected time to reach full teller occupancy</span>
-<span class="c1"># Set up and solve the mean first passage time equations</span>
 <span class="n">target_state</span> <span class="o">=</span> <span class="n">max_tellers</span>  <span class="c1"># All tellers busy</span>
 
-<span class="c1"># Set up system of equations for mean first passage time</span>
-<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_states</span><span class="p">,</span> <span class="n">n_states</span><span class="p">))</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_states</span><span class="p">)</span>
+<span class="c1"># Extract birth rates (λ) and death rates (μ)</span>
+<span class="n">lambdas</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Birth rates (λ_0, λ_1, ..., λ_{N-1})</span>
+<span class="n">mus</span> <span class="o">=</span> <span class="p">[]</span>      <span class="c1"># Death rates (μ_1, μ_2, ..., μ_N)</span>
 
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_states</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">target_state</span><span class="p">:</span>
-        <span class="c1"># Boundary condition: m_ii = 0</span>
-        <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># For i≠j, implement Σ(k≠j) λ_ik * m_kj = -1</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_states</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">target_state</span><span class="p">:</span>  <span class="c1"># k≠j</span>
-                <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">bd_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
-        <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_states</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># For states 0 to N-1</span>
+    <span class="n">lambdas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bd_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Rate from state i to i+1</span>
+    
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_states</span><span class="p">):</span>  <span class="c1"># For states 1 to N</span>
+    <span class="n">mus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bd_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Rate from state i to i-1</span>
+    
+<span class="c1"># Insert μ_0 = 0 since there's no transition from state 0 to -1</span>
+<span class="n">mus</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># Solve the system</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-    <span class="c1"># Time from state 0 (empty) to full occupancy</span>
-    <span class="n">expected_time_to_full</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"4. Expected time to first reach full teller occupancy: </span><span class="si">{</span><span class="n">expected_time_to_full</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> hours"</span><span class="p">)</span>
-<span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"4. Could not calculate expected time (singular matrix)"</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compute_mfpt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">,</span> <span class="n">mus</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">start_state</span><span class="p">):</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span>  <span class="c1"># E[0], E[1], ..., E[N-1]</span>
+    <span class="n">E</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">lambdas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">E</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">mus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">E</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">lambdas</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">start_state</span><span class="p">:])</span>
+
+<span class="c1"># Compute MFPT from state 0 to state max_tellers</span>
+<span class="n">start_state</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">mfpt</span> <span class="o">=</span> <span class="n">compute_mfpt</span><span class="p">(</span><span class="n">lambdas</span><span class="p">,</span> <span class="n">mus</span><span class="p">,</span> <span class="n">target_state</span><span class="p">,</span> <span class="n">start_state</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"4. Expected time to first reach full teller occupancy: </span><span class="si">{</span><span class="n">mfpt</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> hours"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9366,29 +9379,31 @@ Probability of queue formation at 12:00 PM: 0.0003
 <h3 id="Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">Sensitivity Analysis: Impact of Varying Teller Numbers<a class="anchor-link" href="#Sensitivity-Analysis:-Impact-of-Varying-Teller-Numbers">¶</a></h3><p><strong>Why:</strong> To explore how key performance metrics (like the chance of all tellers being busy) change if the bank were to operate with a different number of tellers (e.g., 3, 4, 5, 6, or 7).</p>
 <p><strong>How:</strong></p>
 <ol>
-<li><strong>Define Analysis Function:</strong> Create a function <code>analyze_varying_tellers</code> that takes the arrival rate (λ), service rate (μ), and a list/range of teller numbers (<code>teller_range</code>) to test.</li>
-<li><strong>Loop Through Teller Numbers:</strong> Inside this function, loop through each number of tellers (<code>N</code>) in the <code>teller_range</code>.</li>
-<li><strong>Build Model for N:</strong> For each <code>N</code>, construct the specific Birth-Death rate matrix (<code>Qn</code>) for a system with <code>N</code> tellers using the same λ and μ (this involves an inner helper function <code>construct_Q</code>).</li>
-<li><strong>Calculate Metrics for N:</strong><ul>
-<li>Calculate the steady-state probabilities (<code>π</code>) for this <code>N</code>-teller system using <code>calc_steady_state(Qn)</code>.</li>
-<li>Calculate the traffic intensity <code>ρ = λ / (μ * N)</code> for this <code>N</code>.</li>
-<li>Calculate the blocking probability (<code>blocking_prob</code>), which is the steady-state probability of being in state <code>N</code> (all <code>N</code> tellers busy), i.e., <code>π[N]</code>.</li>
-<li>Calculate the utilization (<code>utilization</code>), which is the probability that at least one teller is busy (<code>1 - π[0]</code>).</li>
+<li><p><strong>Define Analysis Function:</strong> Create a function <code>analyze_varying_tellers</code> that takes the arrival rate (λ), service rate (μ), and a list/range of teller numbers (<code>teller_range</code>) to test.</p>
+</li>
+<li><p><strong>Loop Through Teller Numbers:</strong> Inside this function, loop through each number of tellers (<code>N</code>) in the <code>teller_range</code>.</p>
+</li>
+<li><p><strong>Build Model for N:</strong> For each <code>N</code>, construct the specific Birth-Death rate matrix (<code>Qn</code>) for a system with <code>N</code> tellers using the same λ and μ (using an inner helper function <code>construct_Q</code>).</p>
+</li>
+<li><p><strong>Calculate Metrics for N:</strong></p>
+<ul>
+<li>Calculate steady-state probabilities (<code>π</code>) for this <code>N</code>-teller system</li>
+<li>Calculate traffic intensity <code>ρ = λ / (μ * N)</code> for this <code>N</code></li>
+<li>Calculate blocking probability (<code>blocking_prob</code>), which is the steady-state probability of all tellers being busy, i.e., <code>π[N]</code></li>
+<li><strong>Calculate true utilization:</strong> Compute the expected number of busy tellers <code>Sum(i * π[i])</code> and divide by total tellers <code>N</code></li>
 </ul>
 </li>
-<li><strong>Store Results:</strong> Store these calculated metrics (<code>N</code>, <code>ρ</code>, <code>blocking_prob</code>, <code>utilization</code>) for the current <code>N</code> in a list called <code>results</code>.</li>
-<li><strong>Define Range to Test:</strong> Create a list <code>teller_list</code> containing the number of tellers to analyze. Here, it's set to range from 2 fewer than the actual <code>max_tellers</code> (minimum 1) up to 2 more (so, likely [3, 4, 5, 6, 7]).</li>
-<li><strong>Run Analysis:</strong> Call the <code>analyze_varying_tellers</code> function with the estimated arrival/service rates and the <code>teller_list</code>.</li>
-<li><strong>Print Results:</strong> Loop through the <code>results</code> list and print the key metrics for each number of tellers (<code>N</code>) tested.</li>
+<li><p><strong>Store and Display Results:</strong> Store these metrics for each number of tellers and print them in a formatted table</p>
+</li>
 </ol>
 <p><strong>Output Explanation:</strong> The output shows a comparison for different numbers of tellers:</p>
 <ul>
-<li><strong>N=3:</strong> With 3 tellers, traffic intensity (ρ) is higher (~0.19), blocking probability is ~1.6%, utilization is ~42.5%.</li>
-<li><strong>N=4:</strong> With 4 tellers, ρ drops (~0.14), blocking drops significantly (~0.2%), utilization stays similar (~42.6%).</li>
-<li><strong>N=5 (Actual):</strong> With 5 tellers, ρ drops further (~0.11), blocking becomes very small (~0.03%), utilization is ~42.6%.</li>
-<li><strong>N=6, N=7:</strong> Adding more tellers further reduces ρ and makes blocking almost zero, while utilization remains around 42.6%.</li>
-<li><strong>Interpretation:</strong> This shows diminishing returns. Going from 3 to 4 tellers greatly reduces blocking. Going from 4 to 5 further reduces blocking. Adding tellers beyond 5 has very little impact on blocking (which is already tiny) and doesn't change the overall utilization much in this scenario, suggesting 4 or 5 tellers might be appropriate based purely on these metrics.</li>
+<li><strong>N=3:</strong> With 3 tellers, traffic intensity (ρ) is higher (~0.19), blocking probability is ~1.6%, utilization is ~11.1%</li>
+<li><strong>N=4:</strong> With 4 tellers, ρ drops (~0.14), blocking drops significantly (~0.2%), utilization remains ~11.1%</li>
+<li><strong>N=5 (Actual):</strong> With 5 tellers, ρ drops further (~0.11), blocking becomes very small (~0.03%), utilization is ~11.1%</li>
+<li><strong>N=6, N=7:</strong> Adding more tellers further reduces ρ and makes blocking almost zero, while utilization remains the same</li>
 </ul>
+<p>The key insight is that while having more tellers reduces blocking probability (the chance that all tellers are busy), the actual utilization per teller remains the same. This suggests the system is overstaffed even at 3 tellers, as the utilization is consistently low across all staffing levels.</p>
 </div>
 </div>
 </div>
@@ -9397,7 +9412,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 5. Impact of varying the number of tellers</span>
@@ -9415,9 +9430,15 @@ Probability of queue formation at 12:00 PM: 0.0003
             <span class="k">return</span> <span class="n">Q</span>
         <span class="n">Qn</span> <span class="o">=</span> <span class="n">construct_Q</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
         <span class="n">π</span> <span class="o">=</span> <span class="n">calc_steady_state</span><span class="p">(</span><span class="n">Qn</span><span class="p">)</span>
+        
         <span class="n">traffic_intensity</span> <span class="o">=</span> <span class="n">arrival_rate</span> <span class="o">/</span> <span class="p">(</span><span class="n">service_rate</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span>
         <span class="n">blocking_prob</span> <span class="o">=</span> <span class="n">π</span><span class="p">[</span><span class="n">N</span><span class="p">]</span>                 <span class="c1"># prob all busy</span>
-        <span class="n">utilization</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">π</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>               <span class="c1"># fraction time ≥1 teller busy</span>
+        
+        <span class="c1"># Calculate the expected number of busy tellers</span>
+        <span class="n">expected_busy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">π</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># True utilization: expected proportion of tellers that are busy</span>
+        <span class="n">utilization</span> <span class="o">=</span> <span class="n">expected_busy</span> <span class="o">/</span> <span class="n">N</span>
+        
         <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
             <span class="s1">'tellers'</span><span class="p">:</span> <span class="n">N</span><span class="p">,</span>
             <span class="s1">'ρ'</span><span class="p">:</span> <span class="n">traffic_intensity</span><span class="p">,</span>
@@ -9444,11 +9465,11 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>5) Sensitivity analysis:
-   N=3: ρ=0.19, blocking=0.016, util=0.425
-   N=4: ρ=0.14, blocking=0.002, util=0.426
-   N=5: ρ=0.11, blocking=0.000, util=0.426
-   N=6: ρ=0.09, blocking=0.000, util=0.426
-   N=7: ρ=0.08, blocking=0.000, util=0.426
+   N=3: ρ=0.19, blocking=0.016, util=0.182
+   N=4: ρ=0.14, blocking=0.002, util=0.139
+   N=5: ρ=0.11, blocking=0.000, util=0.111
+   N=6: ρ=0.09, blocking=0.000, util=0.093
+   N=7: ρ=0.08, blocking=0.000, util=0.079
 </pre>
 </div>
 </div>
@@ -9479,7 +9500,7 @@ Probability of queue formation at 12:00 PM: 0.0003
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 6. Full‐capacity visits per 9hr day</span>
